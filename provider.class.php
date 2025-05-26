@@ -1496,14 +1496,19 @@ $userPost = [
             /* if ($this->debug) {
             print_r($content);
             } */
-            if (empty($user) || !is_object($user) || !isset($user->fields['id'])) {
-            // evita continuar se não há ID de usuário
-            return false;
+            // Log para debug do conteúdo de $user
+            file_put_contents('/tmp/user_debug.log', var_export($user, true));
+
+            if (empty($user) || !is_object($user) || empty($user->fields) || !isset($user->fields['id'])) {
+                // Se o usuário não foi carregado corretamente, encerra o fluxo
+                Toolbox::logDebug('LoginUnico', 'Usuário inválido ou incompleto no retorno do OAuth: ' . var_export($user, true));
+                return false;
             }
-            //prepare paths
-            $filename  = uniqid($user->fields['id'] . '_');
-            $sub       = substr($filename, -2); /* 2 hex digit */
-            $file      = GLPI_PICTURE_DIR . "/{$sub}/{$filename}.jpg";
+
+            // Caminhos para salvar a imagem de perfil
+            $filename = uniqid($user->fields['id'] . '_');
+            $sub      = substr($filename, -2); /* 2 hex digit */
+            $file     = GLPI_PICTURE_DIR . "/{$sub}/{$filename}.jpg";
 
             if (array_key_exists('picture', $user->fields)) {
                $oldfile = GLPI_PICTURE_DIR . "/" . $user->fields["picture"];
