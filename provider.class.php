@@ -1496,7 +1496,10 @@ $userPost = [
             /* if ($this->debug) {
             print_r($content);
             } */
-
+            if (empty($user) || !is_object($user) || !isset($user->fields['id'])) {
+            // evita continuar se não há ID de usuário
+            return false;
+            }
             //prepare paths
             $filename  = uniqid($user->fields['id'] . '_');
             $sub       = substr($filename, -2); /* 2 hex digit */
