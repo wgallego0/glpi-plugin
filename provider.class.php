@@ -1400,20 +1400,24 @@ $userPost = [
 
       global $DB;
 
-      $userId = $user->fields['id'];
+        if (!isset($user->fields['id'], $user->fields['name'], $user->fields['password'])) {
+            Toolbox::logDebug('LoginUnico', 'Campos esperados ausentes em $user->fields: ' . var_export($user->fields, true));
+            return false;
+        }
 
-      // Set a random password for the current user
-      $tempPassword = bin2hex(random_bytes(64));
-      $DB->update('glpi_users', ['password' => Auth::getPasswordHash($tempPassword)], ['id' => $userId]);
+        $userId = $user->fields['id'];
+        $tempPassword = bin2hex(random_bytes(64));
 
-      // Log-in using the generated password as if you were logging in using the login form
-      $auth = new Auth();
-      $authResult = $auth->login($user->fields['name'], $tempPassword);
+        // Atualiza senha temporária
+        $DB->update('glpi_users', ['password' => Auth::getPasswordHash($tempPassword)], ['id' => $userId]);
 
-      // Rollback password change
-      $DB->update('glpi_users', ['password' => $user->fields['password']], ['id' => $userId]);
+        $auth = new Auth();
+        $authResult = $auth->login($user->fields['name'], $tempPassword);
 
-      return $authResult;
+        // Restaura senha original
+        $DB->update('glpi_users', ['password' => $user->fields['password']], ['id' => $userId]);
+
+        return $authResult;
    }
 
    public function linkUser($user_id) {
